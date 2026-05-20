@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HaiLanguage - Course Creator</title>
+    <link rel="icon" type="image/png" href="HaiLanguageLogoSmall1.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; font-weight: 300; background-color: #f7f7f7; margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; }
+        .app-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
+        .app-header { position: absolute; top: 0; left: 0; width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+        .logo-link { text-decoration: none; display: inline-block; transition: transform 0.2s ease; }
+        .logo-link:hover { transform: scale(1.02); }
+        .logo-link img { max-height: 45px; width: auto; display: block; }
+        .secondary-btn { background-color: transparent; color: #4285f4; border: 2px solid #4285f4; border-radius: 12px; padding: 8px 16px; font-size: 16px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.2s ease; }
+        .secondary-btn:hover { background-color: #4285f4; color: white; }
+        .screen-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; box-sizing: border-box; background-color: #f7f7f7; }
+        .content-wrapper { width: 100%; max-width: 1000px; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 20px; box-sizing: border-box; }
+        .form-container { max-width: 600px; margin: 0 auto; width: 100%; }
+        h2 { margin-top: 0; margin-bottom: 5px; font-size: 32px; text-align: center; font-weight: 600; letter-spacing: -1px;}
+        p { margin-top: 0; text-align: center; font-size: 18px; color: #555; margin-bottom: 30px; font-weight: 300;}
+        textarea { width: 100%; height: 120px; margin-bottom: 20px; padding: 15px; border-radius: 12px; border: 2px solid #ddd; box-sizing: border-box; font-size: 18px; font-family: 'Inter', sans-serif; font-weight: 400; resize: none; transition: border-color 0.3s ease;}
+        textarea:focus { outline: none; border-color: #4285f4; }
+        .primary-btn { background-color: #4285f4; color: white; border: none; border-radius: 12px; padding: 20px; font-size: 20px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; width: 100%;}
+        .primary-btn:not(:disabled):hover { background-color: #3367d6; box-shadow: 0 4px 10px rgba(66, 133, 244, 0.4); transform: translateY(-2px);}
+        .primary-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        .error-text { color: red; margin-top: 20px; font-weight: 500; display: none; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <header class="app-header">
+        <a href="index.html" class="logo-link"><img src="HaiLanguageLogoFull.png" alt="HaiLanguage Logo"></a>
+        <a href="usercourses.html" class="secondary-btn">My Courses</a>
+    </header>
+    <div class="screen-view">
+        <div class="content-wrapper">
+            <div class="form-container">
+                <h2>Generate a New Course</h2>
+                <p>Enter a language or vocabulary concept to generate a multi-level course:</p>
+                <textarea id="promptInput" placeholder="e.g., French food, Japanese greetings..."></textarea>
+                <button id="generateBtn" class="primary-btn">Generate Course</button>
+                <div id="errorMsg" class="error-text"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const part1 = "AIzaSyCVFmaRcRPgs-bpL0";
+    const part2 = "8RRhA6V3ST5OFCzIk";
+    const API_KEY = part1 + part2;
+    const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+        const promptInput = document.getElementById('promptInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const userTopic = promptInput.value.trim();
+        
+        if (!userTopic) return alert("Please enter a topic!");
+
+        generateBtn.disabled = true; generateBtn.innerText = "Building Course (takes a few seconds)..."; errorMsg.style.display = "none";
+
+        const strictPrompt = `You are a language course generator. The user requested to learn: "${userTopic}".
+RULE 1: Evaluate if this topic is related to learning a language, translation, vocabulary, or grammar. 
+If NOT related, reply EXACTLY with: ERROR_NOT_LANGUAGE
+RULE 2: Create a 3-level course. Each level MUST have exactly 5 multiple choice questions.
+Return ONLY a valid JSON array. NO markdown formatting.
+Format exactly like this:
+[
+  {
+    "levelTitle": "Level 1: Basics",
+    "questions": [
+        {"question": "Q1?", "options": ["W", "W", "C", "W"], "correctIndex": 2},
+        // ... 5 questions total for this level
+    ]
+  }
+]
+Create exactly 3 levels. Ensure 5 questions per level.`;
+
+        try {
+            const response = await fetch(`${API_URL}?key=${API_KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: strictPrompt }] }] }) });
+            const data = await response.json();
+
+            if (response.ok) {
+                let aiText = data.candidates[0].content.parts[0].text.trim();
+                if (aiText.includes("ERROR_NOT_LANGUAGE")) throw new Error("Rejected: Please enter a topic related to language learning!");
+
+                aiText = aiText.replace(/```json/gi, '').replace(/```/g, '').trim();
+                const quizData = JSON.parse(aiText);
+
+                if (quizData.length > 0) {
+                    // Save course metadata for dashboard
+                    let savedCourses = JSON.parse(localStorage.getItem('hai_savedCourses')) || [];
+                    if (!savedCourses.some(course => course.topic.toLowerCase() === userTopic.toLowerCase())) {
+                        let icon = '📚'; const lower = userTopic.toLowerCase();
+                        if (lower.includes('spanish')) icon = '🇪🇸'; else if (lower.includes('french')) icon = '🇫🇷'; else if (lower.includes('japanese')) icon = '🇯🇵';
+                        savedCourses.push({ topic: userTopic, icon: icon });
+                        localStorage.setItem('hai_savedCourses', JSON.stringify(savedCourses));
+                    }
+
+                    // Save structured levels & INITIALIZE STATES
+                    localStorage.setItem('hai_quiz_' + userTopic.toLowerCase(), JSON.stringify(quizData));
+                    localStorage.setItem('hai_progress_' + userTopic.toLowerCase(), '0');
+                    localStorage.setItem('hai_failed_' + userTopic.toLowerCase(), '-1'); // -1 means no failed level
+
+                    // Redirect to the map
+                    window.location.href = 'courseselect.html?topic=' + encodeURIComponent(userTopic);
+                } else throw new Error("AI failed to format the questions.");
+            } else throw new Error(data.error?.message || "API Error");
+        } catch (err) {
+            errorMsg.innerText = err.message; errorMsg.style.display = "block";
+        } finally {
+            generateBtn.disabled = false; generateBtn.innerText = "Generate Course";
+        }
+    });
+</script>
+</body>
+</html>

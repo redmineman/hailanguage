@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HaiLanguage - Course Player</title>
+    <link rel="icon" type="image/png" href="HaiLanguageLogoSmall1.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; font-weight: 300; background-color: #f7f7f7; margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; }
+        .app-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
+        
+        .app-header { position: absolute; top: 0; left: 0; width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+        .logo-link { text-decoration: none; display: inline-block; transition: transform 0.2s ease; }
+        .logo-link:hover { transform: scale(1.02); }
+        .logo-link img { max-height: 45px; width: auto; display: block; }
+        .secondary-btn { background-color: transparent; color: #4285f4; border: 2px solid #4285f4; border-radius: 12px; padding: 8px 16px; font-size: 16px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.2s ease; }
+        .secondary-btn:hover { background-color: #4285f4; color: white; }
+
+        .screen-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; box-sizing: border-box; background-color: #f7f7f7; transition: transform 0.5s ease; }
+        .content-wrapper { width: 100%; max-width: 1000px; height: 100%; display: flex; flex-direction: column; position: relative; }
+
+        /* QUIZ SCREEN */
+        #quizScreen { z-index: 2; transform: translateY(0); }
+        .question-container { padding: 80px 20px 20px 20px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #progressText { color: #888; font-weight: 500; font-size: 16px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;}
+        h1 { font-size: 36px; color: #333; font-weight: 600; margin: 0; letter-spacing: -1px; }
+        
+        .buttons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; margin-bottom: 60px; width: 100%; box-sizing: border-box; }
+        @media (max-width: 768px) { .buttons-grid { grid-template-columns: 1fr; } }
+        
+        .answer-btn { background-color: #7b93ff; color: black; border: none; border-radius: 16px; padding: 20px 10px; font-size: 22px; font-weight: 500; cursor: pointer; min-height: 100px; width: 100%; transition: all 0.3s ease; }
+        .answer-btn:not(:disabled):hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 8px 15px rgba(123, 147, 255, 0.5), 0 0 15px #7b93ff; color: white; }
+        .answer-btn:not(:disabled):active { transform: translateY(2px) scale(0.95); box-shadow: 0 2px 5px rgba(123, 147, 255, 0.4); }
+        .answer-btn:disabled { opacity: 0.8; cursor: default; }
+        
+        /* RESULTS SCREEN */
+        #resultsScreen { z-index: 3; transform: translateY(100%); background-color: white;}
+        #resultsScreen.active { transform: translateY(0); }
+        #resultsScreen .content-wrapper { justify-content: center; padding: 40px 20px; text-align: center; }
+        .results-header { font-size: 24px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;}
+        .results-score { font-size: 80px; font-weight: 600; color: #333; margin: 0; letter-spacing: -3px;}
+        .results-percent { font-size: 32px; font-weight: 600; color: #4285f4; margin: 0 0 20px 0;}
+        .results-message { font-size: 22px; color: #555; font-weight: 300; margin-bottom: 50px;}
+        .primary-btn { background-color: #4285f4; color: white; border: none; border-radius: 12px; padding: 20px; font-size: 20px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; width: 100%; max-width: 400px; margin: 0 auto;}
+        .primary-btn:hover { background-color: #3367d6; transform: translateY(-2px);}
+
+        /* FEEDBACK BANNER */
+        .feedback-banner { position: absolute; bottom: -350px; left: 0; width: 100%; padding: 30px 20px; box-sizing: border-box; display: flex; flex-direction: column; transition: bottom 0.3s ease-in-out; border-top-left-radius: 24px; border-top-right-radius: 24px; z-index: 10; }
+        .feedback-banner.show { bottom: 0; }
+        .feedback-banner.correct { background-color: #d7ffb8; color: #2b5914; }
+        .feedback-banner.incorrect { background-color: #ffdfe0; color: #b71c1c; }
+        .feedback-header { font-size: 36px; font-weight: 600; letter-spacing: -1px; }
+        .correct-answer-text { font-size: 20px; margin-top: 10px; font-weight: 400; }
+        .continue-btn { margin-top: 30px; padding: 20px; border-radius: 16px; border: none; font-size: 20px; font-weight: 500; cursor: pointer; text-transform: uppercase; transition: transform 0.2s ease, opacity 0.2s ease; }
+        .continue-btn:hover { transform: scale(1.02); opacity: 0.9; }
+        .correct .continue-btn { background-color: #58cc02; color: white; }
+        .incorrect .continue-btn { background-color: #ff4b4b; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header class="app-header">
+        <a href="index.html" class="logo-link"><img src="HaiLanguageLogoFull.png" alt="HaiLanguage Logo"></a>
+        <a id="backBtn" href="usercourses.html" class="secondary-btn">Quit Level</a>
+    </header>
+
+    <div id="quizScreen" class="screen-view">
+        <div class="content-wrapper">
+            <div class="question-container">
+                <div id="progressText">Loading...</div>
+                <h1 id="questionText">Preparing your lesson...</h1>
+            </div>
+
+            <div class="buttons-grid">
+                <button class="answer-btn" id="btn0"></button>
+                <button class="answer-btn" id="btn1"></button>
+                <button class="answer-btn" id="btn2"></button>
+                <button class="answer-btn" id="btn3"></button>
+            </div>
+
+            <div id="feedbackBanner" class="feedback-banner">
+                <div>
+                    <div class="feedback-header" id="feedbackTitle">Correct!</div>
+                    <div id="feedbackSubtext" class="correct-answer-text"></div>
+                </div>
+                <button class="continue-btn" id="continueBtn">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultsScreen" class="screen-view">
+        <div class="content-wrapper">
+            <div class="results-header" id="resultHeadline">Level Complete</div>
+            <h1 class="results-score" id="scoreText">0 / 5</h1>
+            <h2 class="results-percent" id="percentText">0%</h2>
+            <p class="results-message" id="messageText">Keep practicing!</p>
+            
+            <button id="restartBtn" class="primary-btn">Return to Path</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activeLevelQuestions = [];
+    let currentTopic = '';
+    let levelIndex = 0; 
+    let currentQuestionIndex = 0;
+    let userScore = 0;
+
+    const progressText = document.getElementById('progressText');
+    const questionEl = document.getElementById('questionText');
+    const answerButtons = [
+        document.getElementById('btn0'), document.getElementById('btn1'),
+        document.getElementById('btn2'), document.getElementById('btn3')
+    ];
+    const feedbackBanner = document.getElementById('feedbackBanner');
+    const feedbackTitle = document.getElementById('feedbackTitle');
+    const feedbackSubtext = document.getElementById('feedbackSubtext');
+    const continueBtn = document.getElementById('continueBtn');
+    
+    const resultsScreen = document.getElementById('resultsScreen');
+    const resultHeadline = document.getElementById('resultHeadline');
+    const scoreText = document.getElementById('scoreText');
+    const percentText = document.getElementById('percentText');
+    const messageText = document.getElementById('messageText');
+    const restartBtn = document.getElementById('restartBtn');
+    const backBtn = document.getElementById('backBtn');
+
+    window.onload = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        currentTopic = urlParams.get('topic');
+        levelIndex = parseInt(urlParams.get('lvl')) || 0; 
+
+        if (!currentTopic) return window.location.href = 'usercourses.html';
+        
+        backBtn.href = 'courseselect.html?topic=' + encodeURIComponent(currentTopic);
+
+        const safeTopicKey = 'hai_quiz_' + currentTopic.toLowerCase();
+        const fullCourseData = JSON.parse(localStorage.getItem(safeTopicKey) || '[]');
+
+        if (fullCourseData.length > levelIndex) {
+            // Isolate ONLY the 5 questions for this specific level
+            activeLevelQuestions = fullCourseData[levelIndex].questions;
+            loadQuestion();
+        } else {
+            window.location.href = 'usercourses.html';
+        }
+    };
+
+    function loadQuestion() {
+        feedbackBanner.classList.remove('show'); 
+        progressText.innerText = `Question ${currentQuestionIndex + 1} of ${activeLevelQuestions.length}`;
+        
+        const currentQ = activeLevelQuestions[currentQuestionIndex];
+
+        questionEl.innerText = currentQ.question; 
+        answerButtons[0].innerText = currentQ.options[0];
+        answerButtons[1].innerText = currentQ.options[1];
+        answerButtons[2].innerText = currentQ.options[2];
+        answerButtons[3].innerText = currentQ.options[3];
+        answerButtons.forEach(btn => btn.disabled = false);
+    }
+
+    function checkAnswer(clickedButtonIndex) {
+        answerButtons.forEach(btn => btn.disabled = true);
+        feedbackBanner.classList.remove('correct', 'incorrect');
+        
+        const currentQ = activeLevelQuestions[currentQuestionIndex];
+        
+        if (clickedButtonIndex === currentQ.correctIndex) {
+            userScore++; 
+            feedbackBanner.classList.add('correct');
+            feedbackTitle.innerText = "Correct!";
+            feedbackSubtext.innerText = "";
+        } else {
+            feedbackBanner.classList.add('incorrect');
+            feedbackTitle.innerText = "Incorrect";
+            feedbackSubtext.innerText = "Correct answer: " + currentQ.options[currentQ.correctIndex]; 
+        }
+        feedbackBanner.classList.add('show');
+    }
+
+    answerButtons[0].addEventListener('click', () => checkAnswer(0));
+    answerButtons[1].addEventListener('click', () => checkAnswer(1));
+    answerButtons[2].addEventListener('click', () => checkAnswer(2));
+    answerButtons[3].addEventListener('click', () => checkAnswer(3));
+
+    continueBtn.addEventListener('click', () => {
+        if (currentQuestionIndex < activeLevelQuestions.length - 1) {
+            currentQuestionIndex++; 
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    });
+
+    function showResults() {
+        feedbackBanner.classList.remove('show');
+        const total = activeLevelQuestions.length;
+        const percentage = Math.round((userScore / total) * 100);
+
+        scoreText.innerText = `${userScore} / ${total}`;
+        percentText.innerText = `${percentage}%`;
+
+        // PASS OR FAIL LOGIC
+        if (percentage >= 50) {
+            // They Passed!
+            resultHeadline.innerText = "Level Passed!";
+            resultHeadline.style.color = "#58cc02";
+            messageText.innerText = "Great job! You've unlocked the next unit.";
+            percentText.style.color = "#58cc02";
+            
+            // Advance progress if they beat their highest level
+            let currentProgress = parseInt(localStorage.getItem('hai_progress_' + currentTopic.toLowerCase())) || 0;
+            if (levelIndex >= currentProgress) {
+                localStorage.setItem('hai_progress_' + currentTopic.toLowerCase(), levelIndex + 1);
+            }
+            // Clear any fail state
+            localStorage.setItem('hai_failed_' + currentTopic.toLowerCase(), '-1');
+
+        } else {
+            // They Failed! (< 50%)
+            resultHeadline.innerText = "Level Failed";
+            resultHeadline.style.color = "#ff4b4b";
+            messageText.innerText = "You scored below 50%. You must retry this level to advance.";
+            percentText.style.color = "#ff4b4b";
+            
+            // Record fail state so the map turns red
+            localStorage.setItem('hai_failed_' + currentTopic.toLowerCase(), levelIndex.toString());
+        }
+
+        resultsScreen.classList.add('active');
+    }
+
+    restartBtn.addEventListener('click', () => {
+        // Return to the map to see the red/green changes!
+        window.location.href = 'courseselect.html?topic=' + encodeURIComponent(currentTopic);
+    });
+</script>
+</body>
+</html>

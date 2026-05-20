@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HaiLanguage</title>
+    <link rel="icon" type="image/png" href="HaiLanguageLogoSmall1.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- BASE STYLES --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            background-color: #fcfcfc;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .content-wrapper {
+            width: 100%;
+            max-width: 1000px; 
+            margin: 0 auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+
+        /* --- HEADER & LOGO --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 40px;
+        }
+
+        /* Removed any default link styling (like underlines) from the logo link */
+        .logo-link {
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+        
+        /* Optional: Gives the logo a tiny hover bounce so it feels clickable! */
+        .logo-link:hover {
+            transform: scale(1.02);
+        }
+
+        /* --- HERO SECTION --- */
+        .hero-section {
+            text-align: center;
+            padding: 60px 0 100px 0;
+        }
+        .hero-section h1 {
+            font-size: 56px;
+            font-weight: 600; 
+            margin: 0 0 20px 0;
+            color: #111;
+            letter-spacing: -1px; 
+        }
+        .hero-section p {
+            font-size: 24px;
+            font-weight: 300; 
+            color: #666;
+            margin: 0 auto 40px auto;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+
+        /* --- BUTTONS --- */
+        .primary-btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 20px 40px;
+            font-size: 20px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500; 
+            cursor: pointer;
+            text-decoration: none; 
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .primary-btn:hover {
+            background-color: #3367d6;
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 8px 15px rgba(66, 133, 244, 0.4), 0 0 15px #4285f4;
+        }
+        .primary-btn:active {
+            transform: translateY(2px) scale(0.95);
+            box-shadow: 0 2px 5px rgba(66, 133, 244, 0.4);
+        }
+
+        .secondary-btn {
+            background-color: transparent;
+            color: #4285f4;
+            border: 2px solid #4285f4;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .secondary-btn:hover {
+            background-color: #4285f4;
+            color: white;
+        }
+
+        /* --- ALTERNATING ZIG-ZAG OVERVIEW SECTIONS --- */
+        .features-section {
+            display: flex;
+            flex-direction: column;
+            gap: 80px; 
+            padding-bottom: 40px; 
+        }
+
+        .feature-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 60px;
+        }
+
+        .feature-row:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .feature-text {
+            flex: 1;
+        }
+        .feature-text h3 {
+            font-size: 42px; 
+            font-weight: 600; 
+            margin: 0 0 20px 0;
+            color: #58cc02; 
+            letter-spacing: -1px;
+        }
+        
+        .feature-row:nth-child(even) .feature-text h3 {
+            color: #4285f4; 
+        }
+
+        .feature-text p {
+            font-size: 20px;
+            font-weight: 300; 
+            color: #555;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .image-container {
+            flex: 1; 
+            display: flex;
+            justify-content: center;
+        }
+
+        .image-placeholder {
+            width: 100%;
+            max-width: 400px;
+            height: 350px;
+            background-color: #e5e5e5;
+            border: 2px dashed #ccc;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 18px;
+            font-weight: 500;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 768px) {
+            .feature-row, 
+            .feature-row:nth-child(even) {
+                flex-direction: column; 
+                text-align: center;
+                gap: 40px;
+            }
+            .feature-text h3 {
+                font-size: 32px;
+            }
+        }
+
+        /* --- CTA FOOTER --- */
+        .bottom-cta {
+            text-align: center;
+            padding: 60px 0 80px 0; 
+            margin-top: 0;
+            border-top: 2px solid #e5e5e5;
+        }
+        .bottom-cta h2 {
+            font-size: 36px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            letter-spacing: -0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="content-wrapper">
+        
+        <header>
+            <a href="index.html" class="logo-link">
+                <img src="HaiLanguageLogoFull.png" alt="HaiLanguage Logo" style="max-height: 60px; width: auto; display: block;">
+            </a>
+            <a href="usercourses.html" class="secondary-btn">Try the App</a>
+        </header>
+
+        <section class="hero-section">
+            <h1>Learn a language like never before.</h1>
+            <p>Discover the most effective way to master a new language with our innovative AI-powered platform.</p>
+            <a href="usercourses.html" class="primary-btn">Get Started</a>
+        </section>
+
+        <section class="features-section">
+            
+            <div class="feature-row">
+                <div class="feature-text">
+                    <h3>free. fun. effective.</h3>
+                    <p>[HaiLanguage is made to keep you engaged and learning efficiently, free. forevever.]</p>
+                </div>
+                <div class="image-container">
+                    <div class="image-placeholder">
+                        [ APP SCREENSHOT 1 GOES HERE ]
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-text">
+                    <h3>ai-powered learning.</h3>
+                    <p>[HaiLanguage is powered by Gemini, curating your courses personally for you.]</p>
+                </div>
+                <div class="image-container">
+                    <div class="image-placeholder">
+                        [ APP SCREENSHOT 2 GOES HERE ]
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-text">
+                    <h3>instant feedback.</h3>
+                    <p>[Know immediately if you got the answer right, and see the correct translation instantly so you can learn from your mistakes.]</p>
+                </div>
+                <div class="image-container">
+                    <div class="image-placeholder">
+                        [ APP SCREENSHOT 3 GOES HERE ]
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="bottom-cta">
+            <h2>Ready to start your language journey?</h2>
+            <a href="usercourses.html" class="primary-btn">Start Learning Now</a>
+        </section>
+
+    </div>
+
+</body>
+</html>

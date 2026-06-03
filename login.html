@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HaiLanguage - Sign In</title>
+    <link rel="icon" type="image/png" href="HaiLanguageLogoSmall1.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f7f7f7; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-card { background: white; padding: 40px; border-radius: 24px; border: 2px solid #e5e5e5; box-shadow: 0 4px 15px rgba(0,0,0,0.02); width: 100%; max-width: 400px; box-sizing: border-box; text-align: center; }
+        .logo-link img { max-height: 50px; margin-bottom: 20px; }
+        h2 { margin: 0 0 10px 0; font-size: 28px; font-weight: 600; letter-spacing: -0.5px; }
+        p { color: #666; margin: 0 0 30px 0; font-size: 16px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; color: #333; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #ddd; font-size: 16px; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: border-color 0.2s; }
+        input[type="text"]:focus, input[type="password"]:focus { outline: none; border-color: #4285f4; }
+        
+        /* --- Remember Me Styles --- */
+        .remember-group { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; text-align: left; }
+        .remember-group input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #4285f4; }
+        .remember-group label { margin: 0; cursor: pointer; font-weight: 400; color: #555; }
+
+        .primary-btn { background-color: #4285f4; color: white; border: none; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 500; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .primary-btn:hover { background-color: #3367d6; }
+        .error-msg { color: #ea4335; font-size: 14px; margin-bottom: 15px; display: none; font-weight: 500; }
+        .switch-mode { margin-top: 20px; font-size: 14px; color: #555; }
+        .switch-mode a { color: #4285f4; text-decoration: none; font-weight: 500; }
+        .switch-mode a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <a href="index.html" class="logo-link">
+            <img src="HaiLanguageLogoFull.png" alt="HaiLanguage Logo">
+        </a>
+        <h2 id="formTitle">Welcome Back</h2>
+        <p id="formSubtitle">Log in to continue your language journey.</p>
+
+        <div id="errorMessage" class="error-msg"></div>
+
+        <form id="authForm">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required placeholder="Enter username">
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required placeholder="Enter password">
+            </div>
+            
+            <div class="remember-group" id="rememberContainer">
+                <input type="checkbox" id="rememberMe" checked>
+                <label for="rememberMe">Remember me</label>
+            </div>
+
+            <button type="submit" id="submitBtn" class="primary-btn">Sign In</button>
+        </form>
+
+        <div class="switch-mode">
+            <span id="switchText">Don't have an account?</span> 
+            <a href="#" id="switchLink">Sign Up</a>
+        </div>
+    </div>
+
+    <script>
+        // --- AUTO LOGIN CHECK ---
+        // If they are already remembered, skip this page!
+        if (localStorage.getItem('hai_currentUser') || sessionStorage.getItem('hai_currentUser')) {
+            window.location.href = 'usercourses.html';
+        }
+
+        const authForm = document.getElementById('authForm');
+        const formTitle = document.getElementById('formTitle');
+        const formSubtitle = document.getElementById('formSubtitle');
+        const submitBtn = document.getElementById('submitBtn');
+        const switchLink = document.getElementById('switchLink');
+        const switchText = document.getElementById('switchText');
+        const errorMessage = document.getElementById('errorMessage');
+        const rememberContainer = document.getElementById('rememberContainer');
+        const rememberMeCheckbox = document.getElementById('rememberMe');
+
+        let isLoginMode = true;
+
+        switchLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            isLoginMode = !isLoginMode;
+            errorMessage.style.display = 'none';
+            authForm.reset();
+
+            if (isLoginMode) {
+                formTitle.innerText = "Welcome Back";
+                formSubtitle.innerText = "Log in to continue your language journey.";
+                submitBtn.innerText = "Sign In";
+                switchText.innerText = "Don't have an account?";
+                switchLink.innerText = "Sign Up";
+                rememberContainer.style.display = "flex"; // Show checkbox
+            } else {
+                formTitle.innerText = "Create Account";
+                formSubtitle.innerText = "Join HaiLanguage and start learning.";
+                submitBtn.innerText = "Sign Up";
+                switchText.innerText = "Already have an account?";
+                switchLink.innerText = "Sign In";
+                rememberContainer.style.display = "none"; // Hide checkbox for sign up
+            }
+        });
+
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const usernameInput = document.getElementById('username').value.trim();
+            const passwordInput = document.getElementById('password').value;
+            errorMessage.style.display = 'none';
+
+            let users = JSON.parse(localStorage.getItem('hai_registered_users')) || [];
+
+            if (isLoginMode) {
+                const validUser = users.find(u => u.username.toLowerCase() === usernameInput.toLowerCase() && u.password === passwordInput);
+
+                if (validUser) {
+                    saveSession(usernameInput);
+                } else {
+                    showError("Invalid username or password.");
+                }
+            } else {
+                const userExists = users.some(u => u.username.toLowerCase() === usernameInput.toLowerCase());
+
+                if (userExists) {
+                    showError("Username is already taken.");
+                } else {
+                    users.push({ username: usernameInput, password: passwordInput });
+                    localStorage.setItem('hai_registered_users', JSON.stringify(users));
+                    saveSession(usernameInput);
+                }
+            }
+        });
+
+        function saveSession(username) {
+            // Clear any old data first to avoid conflicts
+            localStorage.removeItem('hai_currentUser');
+            sessionStorage.removeItem('hai_currentUser');
+
+            // Save based on the checkbox (or default to localStorage if creating an account)
+            if (isLoginMode && !rememberMeCheckbox.checked) {
+                sessionStorage.setItem('hai_currentUser', username);
+            } else {
+                localStorage.setItem('hai_currentUser', username);
+            }
+            
+            window.location.href = 'usercourses.html';
+        }
+
+        function showError(message) {
+            errorMessage.innerText = message;
+            errorMessage.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

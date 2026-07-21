@@ -17,8 +17,10 @@
         .secondary-btn { background-color: transparent; color: #4285f4; border: 2px solid #4285f4; border-radius: 12px; padding: 8px 16px; font-size: 16px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.2s ease; }
         .secondary-btn:hover { background-color: #4285f4; color: white; }
 
+        .header-actions { display: flex; align-items: center; gap: 15px; }
         .streak-container { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 18px; color: #ff9800; background-color: #fff3e0; padding: 8px 16px; border-radius: 20px; border: 2px solid #ffe0b2; transition: transform 0.2s ease; cursor: default; }
         .streak-container:hover { transform: scale(1.05); }
+        .streak-icon { font-size: 22px; }
 
         .path-container { position: relative; max-width: 600px; margin: 120px auto 0 auto; display: flex; flex-direction: column; align-items: center; gap: 40px; }
         .path-header { text-align: center; margin-bottom: 20px; }
@@ -60,7 +62,10 @@
 
     <header class="app-header">
         <a href="index.html" class="logo-link"><img src="HaiLanguageLogoFull.png" alt="HaiLanguage Logo"></a>
-        <a href="usercourses.html" class="secondary-btn">My Courses</a>
+        <div class="header-actions">
+            <div class="streak-container" id="streakWidget" title="Your Daily Streak"><span class="streak-icon">🔥</span><span id="streakCount">0</span></div>
+            <a href="usercourses.html" class="secondary-btn">My Courses</a>
+        </div>
     </header>
 
     <main class="path-container" id="dynamicPath"></main>
@@ -114,7 +119,55 @@
                 pathContainer.innerHTML += `<div class="node-wrapper"><div class="path-header"><h2 style="color:#58cc02; background: white; padding: 10px 20px; border-radius: 20px; border: 2px solid #58cc02; margin-top:20px;">Course Complete! 🏆</h2></div></div>`;
             }
         }
+        function getStreakStorageKey() {
+            const activeUser = localStorage.getItem('hai_currentUser') || sessionStorage.getItem('hai_currentUser') || '';
+            return activeUser ? `hai_streak_${activeUser.toLowerCase()}` : 'hai_streak_guest';
+        }
+
+        function getDayKey(date = new Date()) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function checkAndUpdateStreak() {
+            const streakKey = getStreakStorageKey();
+            const dateKey = `${streakKey}_date`;
+            const streakElement = document.getElementById('streakCount');
+            const streakWidget = document.getElementById('streakWidget');
+            const todayKey = getDayKey();
+
+            let currentStreak = parseInt(localStorage.getItem(streakKey), 10) || 0;
+            const lastSeenDate = localStorage.getItem(dateKey);
+
+            if (!lastSeenDate) {
+                currentStreak = currentStreak > 0 ? currentStreak : 1;
+            } else if (lastSeenDate !== todayKey) {
+                const lastDate = new Date(lastSeenDate);
+                const today = new Date(todayKey);
+                const yesterday = new Date(today);
+                yesterday.setDate(today.getDate() - 1);
+
+                const isConsecutiveDay = getDayKey(lastDate) === getDayKey(yesterday);
+                currentStreak = isConsecutiveDay ? currentStreak + 1 : 1;
+                streakWidget.style.transform = 'scale(1.2)';
+                setTimeout(() => streakWidget.style.transform = 'scale(1)', 350);
+            }
+
+            localStorage.setItem(streakKey, currentStreak);
+            localStorage.setItem(dateKey, todayKey);
+            streakElement.innerText = currentStreak;
+        }
+
         buildMap();
+        checkAndUpdateStreak();
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                checkAndUpdateStreak();
+            }
+        });
+        window.addEventListener('focus', checkAndUpdateStreak);
     </script>
 </body>
 </html>

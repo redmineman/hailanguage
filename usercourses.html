@@ -141,61 +141,62 @@
         function loadRandomLevels(savedCourses) {
             const levelsGrid = document.getElementById('dynamicLevelsGrid');
             
-            // If the user hasn't created any courses yet, keep the blank slots
             if (!savedCourses || savedCourses.length === 0) {
                 return; 
             }
 
-            // Pool of typical lesson names to assign randomly
-            const levelNames = ['Basics & Introductions', 'Numbers & Colors', 'Common Phrases', 'Grammar 101', 'Everyday Vocabulary', 'Asking Questions'];
-            
-            levelsGrid.innerHTML = ''; // Clear the blank slots
+            levelsGrid.innerHTML = '';
 
-            // Generate exactly 3 random level cards
-            for(let i = 0; i < 3; i++) {
-                // Pick a random course from their list
-                const randomCourse = savedCourses[Math.floor(Math.random() * savedCourses.length)];
-                // Pick a random level name from the pool
-                const randomLevelName = levelNames[Math.floor(Math.random() * levelNames.length)];
-                
-                // Link it to the course.html file (assuming your app structure)
+            const featuredCourses = savedCourses.slice(0, 3);
+            featuredCourses.forEach(course => {
+                const courseTitle = course.topic || 'New Course';
                 levelsGrid.innerHTML += `
-                    <a href="course.html?topic=${encodeURIComponent(randomCourse.topic)}&level=${encodeURIComponent(randomLevelName)}" class="level-card">
-                        <div class="level-icon">${randomCourse.icon || '📝'}</div>
-                        <p class="level-topic">${randomCourse.topic}</p>
-                        <h4 class="level-name">${randomLevelName}</h4>
+                    <a href="courseselect.html?topic=${encodeURIComponent(courseTitle)}" class="level-card">
+                        <div class="level-icon">${course.icon || '📝'}</div>
+                        <p class="level-topic">${courseTitle}</p>
+                        <h4 class="level-name">5-Level Beginner Path</h4>
                     </a>
                 `;
-            }
+            });
         }
 
-        const STREAK_DAY_MS = 2 * 60 * 1000; 
+        const STREAK_UPDATE_MS = 60 * 1000; // 1 minute in milliseconds (for testing)
+
+        function getStreakStorageKey() {
+            const activeUser = localStorage.getItem('hai_currentUser') || sessionStorage.getItem('hai_currentUser') || '';
+            return activeUser ? `hai_streak_${activeUser.toLowerCase()}` : 'hai_streak_guest';
+        }
+
         function checkAndUpdateStreak() {
-            let currentStreak = parseInt(localStorage.getItem('hai_streakCount')) || 0;
-            let lastCheckIn = parseInt(localStorage.getItem('hai_lastCheckIn')) || 0;
+            const streakKey = getStreakStorageKey();
+            let currentStreak = parseInt(localStorage.getItem(streakKey), 10) || 0;
+            let lastCheckIn = parseInt(localStorage.getItem(`${streakKey}_last`), 10) || 0;
             const now = Date.now();
             const streakElement = document.getElementById('streakCount');
             const streakWidget = document.getElementById('streakWidget');
 
-            if (lastCheckIn === 0) { currentStreak = 1; lastCheckIn = now; } 
-            else {
-                const timePassed = now - lastCheckIn;
-                if (timePassed >= STREAK_DAY_MS && timePassed < (STREAK_DAY_MS * 2)) {
-                    currentStreak++; lastCheckIn = now;
-                    streakWidget.style.transform = 'scale(1.3)'; setTimeout(() => streakWidget.style.transform = 'scale(1)', 400);
-                } else if (timePassed >= (STREAK_DAY_MS * 2)) {
-                    currentStreak = 1; lastCheckIn = now;
-                    streakWidget.style.backgroundColor = "#ffdfe0"; streakWidget.style.borderColor = "#ffb3b3";
-                    setTimeout(() => { streakWidget.style.backgroundColor = "#fff3e0"; streakWidget.style.borderColor = "#ffe0b2"; }, 2000);
+            if (lastCheckIn === 0) {
+                currentStreak = 1;
+                lastCheckIn = now;
+            } else {
+                const elapsedMinutes = Math.floor((now - lastCheckIn) / STREAK_UPDATE_MS);
+
+                if (elapsedMinutes >= 1) {
+                    currentStreak += elapsedMinutes;
+                    lastCheckIn = now;
+                    streakWidget.style.transform = 'scale(1.3)';
+                    setTimeout(() => streakWidget.style.transform = 'scale(1)', 400);
                 }
             }
-            localStorage.setItem('hai_streakCount', currentStreak);
-            localStorage.setItem('hai_lastCheckIn', lastCheckIn);
+
+            localStorage.setItem(streakKey, currentStreak);
+            localStorage.setItem(`${streakKey}_last`, lastCheckIn);
             streakElement.innerText = currentStreak;
         }
 
         loadSavedCourses();
         checkAndUpdateStreak();
+        setInterval(checkAndUpdateStreak, STREAK_UPDATE_MS);
     </script>
 </body>
 </html>

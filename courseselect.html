@@ -80,25 +80,25 @@
             let failedLevel = parseInt(localStorage.getItem('hai_failed_' + currentTopic.toLowerCase())) || -1;
 
             const pathContainer = document.getElementById('dynamicPath');
+            const totalUnits = courseLevels.length || 5;
+            const safeProgress = Math.min(progress, totalUnits);
             
             pathContainer.innerHTML = `
                 <div class="node-wrapper">
                     <div class="path-header">
                         <h1>${currentTopic}</h1>
-                        <p>Course Progress: ${progress}/${courseLevels.length} Units</p>
+                        <p>Course Progress: ${safeProgress}/${totalUnits} Units</p>
                     </div>
                 </div>
             `;
 
-            // Draw the nodes
             courseLevels.forEach((levelData, index) => {
                 let nodeHtml = '';
                 let label = levelData.levelTitle || `Unit ${index + 1}`;
                 
-                if (index < progress) {
-                    nodeHtml = `<div class="node-wrapper"><div class="level-label">${label}</div><a href="course.html?topic=${encodeURIComponent(currentTopic)}&lvl=${index}" class="path-node node-completed">⭐</a></div>`;
-                } else if (index === progress) {
-                    // Check if they failed this level!
+                if (index < safeProgress) {
+                    nodeHtml = `<div class="node-wrapper"><div class="level-label">${label}</div><a href="course.html?topic=${encodeURIComponent(currentTopic)}&lvl=${index}" class="path-node node-completed">✓</a></div>`;
+                } else if (index === safeProgress) {
                     if (failedLevel === index) {
                         nodeHtml = `<div class="node-wrapper"><div class="level-label" style="color:#ff4b4b;">FAILED - RETRY!</div><a href="course.html?topic=${encodeURIComponent(currentTopic)}&lvl=${index}" class="path-node node-failed">${index + 1}</a></div>`;
                     } else {
@@ -110,7 +110,7 @@
                 pathContainer.innerHTML += nodeHtml;
             });
 
-            if (progress >= courseLevels.length && courseLevels.length > 0) {
+            if (safeProgress >= totalUnits && totalUnits > 0) {
                 pathContainer.innerHTML += `<div class="node-wrapper"><div class="path-header"><h2 style="color:#58cc02; background: white; padding: 10px 20px; border-radius: 20px; border: 2px solid #58cc02; margin-top:20px;">Course Complete! 🏆</h2></div></div>`;
             }
         }

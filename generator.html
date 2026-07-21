@@ -55,6 +55,52 @@
     const API_KEY = part1 + part2;
     const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
 
+    function getLanguageProfile(topic) {
+        const lower = topic.toLowerCase();
+
+        if (lower.includes('japanese') || lower.includes('jpn') || lower.includes('nihongo')) {
+            return {
+                icon: 'ひらがな・カタカナ・漢字',
+                label: 'Japanese',
+                scriptHint: 'Use Japanese script examples with hiragana, katakana, and simple kanji where appropriate.'
+            };
+        }
+
+        if (lower.includes('arabic') || lower.includes('arab')) {
+            return {
+                icon: 'العربية',
+                label: 'Arabic',
+                scriptHint: 'Use Arabic script examples and include transliteration when helpful.'
+            };
+        }
+
+        if (lower.includes('korean') || lower.includes('hangul')) {
+            return {
+                icon: '한글',
+                label: 'Korean',
+                scriptHint: 'Use Hangul examples and simple pronunciation notes.'
+            };
+        }
+
+        if (lower.includes('chinese') || lower.includes('mandarin') || lower.includes('cantonese')) {
+            return {
+                icon: '漢字',
+                label: 'Chinese',
+                scriptHint: 'Use Chinese characters and pinyin support where helpful.'
+            };
+        }
+
+        if (lower.includes('spanish')) {
+            return { icon: '🇪🇸', label: 'Spanish', scriptHint: 'Use Spanish spelling, accents, and common vocabulary.' };
+        }
+
+        if (lower.includes('french')) {
+            return { icon: '🇫🇷', label: 'French', scriptHint: 'Use French accents and everyday vocabulary.' };
+        }
+
+        return { icon: '📚', label: 'the target language', scriptHint: 'Use the relevant alphabet or script for the requested language.' };
+    }
+
     document.getElementById('generateBtn').addEventListener('click', async () => {
         const promptInput = document.getElementById('promptInput');
         const generateBtn = document.getElementById('generateBtn');
@@ -65,22 +111,36 @@
 
         generateBtn.disabled = true; generateBtn.innerText = "Building Course (takes a few seconds)..."; errorMsg.style.display = "none";
 
+        const languageProfile = getLanguageProfile(userTopic);
         const strictPrompt = `You are a language course generator. The user requested to learn: "${userTopic}".
 RULE 1: Evaluate if this topic is related to learning a language, translation, vocabulary, or grammar. 
 If NOT related, reply EXACTLY with: ERROR_NOT_LANGUAGE
-RULE 2: Create a 3-level course. Each level MUST have exactly 5 multiple choice questions.
+RULE 2: Create a beginner-friendly 5-level course for someone with no prior experience. The progression should feel easy to follow from absolute basics to simple everyday use.
+RULE 3: Use the correct script and symbols for ${languageProfile.label}. ${languageProfile.scriptHint}
+Each level MUST include:
+- "levelTitle": a clear title
+- "intro": a short beginner-friendly paragraph explaining what this level teaches
+- "learning": an array of 2 or 3 short lesson items, each with "title" and "content"
+- "questions": exactly 10 multiple choice questions
+The questions should repeat core ideas in different wording and different answer layouts so the learner sees the same concepts again in fresh formatting.
+For Japanese, include examples such as ひらがな, カタカナ, and simple 漢字 where appropriate, and include a romanized subtitle like "(romaji: ichi)". For Arabic, include Arabic script examples and a romanized subtitle like "(transliteration: shukran)". For Korean, use Hangul and include a romanized subtitle like "(romanized: annyeong)". For Chinese, use Chinese characters and include pinyin subtitles where helpful.
 Return ONLY a valid JSON array. NO markdown formatting.
 Format exactly like this:
 [
   {
-    "levelTitle": "Level 1: Basics",
+    "levelTitle": "Level 1: First Steps",
+    "intro": "A short beginner-friendly intro for this level.",
+    "learning": [
+      {"title": "Key idea", "content": "Short explanation with the correct script and a romanized subtitle."},
+      {"title": "Another key idea", "content": "Short explanation with the correct script and a romanized subtitle."}
+    ],
     "questions": [
-        {"question": "Q1?", "options": ["W", "W", "C", "W"], "correctIndex": 2},
-        // ... 5 questions total for this level
+      {"question": "Q1?", "options": ["Wrong", "Wrong", "Correct", "Wrong"], "correctIndex": 2},
+      {"question": "Q2?", "options": ["Wrong", "Correct", "Wrong", "Wrong"], "correctIndex": 1}
     ]
   }
 ]
-Create exactly 3 levels. Ensure 5 questions per level.`;
+Create exactly 5 levels. Ensure 10 questions per level.`;
 
         try {
             const response = await fetch(`${API_URL}?key=${API_KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: strictPrompt }] }] }) });
@@ -97,9 +157,8 @@ Create exactly 3 levels. Ensure 5 questions per level.`;
                     // Save course metadata for dashboard
                     let savedCourses = JSON.parse(localStorage.getItem('hai_savedCourses')) || [];
                     if (!savedCourses.some(course => course.topic.toLowerCase() === userTopic.toLowerCase())) {
-                        let icon = '📚'; const lower = userTopic.toLowerCase();
-                        if (lower.includes('spanish')) icon = '🇪🇸'; else if (lower.includes('french')) icon = '🇫🇷'; else if (lower.includes('japanese')) icon = '🇯🇵';
-                        savedCourses.push({ topic: userTopic, icon: icon });
+                        const languageProfile = getLanguageProfile(userTopic);
+                        savedCourses.push({ topic: userTopic, icon: languageProfile.icon });
                         localStorage.setItem('hai_savedCourses', JSON.stringify(savedCourses));
                     }
 

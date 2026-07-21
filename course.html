@@ -19,11 +19,27 @@
         .secondary-btn { background-color: transparent; color: #4285f4; border: 2px solid #4285f4; border-radius: 12px; padding: 8px 16px; font-size: 16px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.2s ease; }
         .secondary-btn:hover { background-color: #4285f4; color: white; }
 
-        .screen-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; box-sizing: border-box; background-color: #f7f7f7; transition: transform 0.5s ease; }
+        .screen-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; box-sizing: border-box; background-color: #f7f7f7; transition: transform 0.5s ease; }
+        .screen-view.active { display: flex; }
         .content-wrapper { width: 100%; max-width: 1000px; height: 100%; display: flex; flex-direction: column; position: relative; }
 
+        /* LEARNING SCREEN */
+        #learningScreen { z-index: 3; }
+        .learning-container { padding: 90px 20px 20px 20px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; overflow-y: auto; }
+        .learning-badge { background-color: #e8f1ff; color: #3367d6; border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+        .learning-title { font-size: 32px; color: #111; font-weight: 700; margin: 0; letter-spacing: -1px; }
+        .learning-intro { font-size: 18px; color: #555; margin: 0; max-width: 700px; line-height: 1.6; }
+        .learning-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; width: 100%; max-width: 800px; margin-top: 8px; }
+        .learning-card { background: white; border: 2px solid #e5e5e5; border-radius: 18px; padding: 20px; text-align: left; box-shadow: 0 3px 8px rgba(0,0,0,0.03); }
+        .learning-card strong { display: block; font-size: 18px; color: #333; margin-bottom: 8px; }
+        .learning-card p { margin: 0; color: #666; font-size: 15px; line-height: 1.5; }
+        .script-symbol { position: relative; display: inline-block; cursor: help; border-bottom: 1px dotted #4285f4; color: #1f3c88; font-weight: 600; }
+        .script-symbol .pronunciation-inline { margin-left: 4px; color: #6b7280; font-size: 0.9em; font-weight: 500; }
+        .script-symbol:hover::after { content: attr(data-pronunciation); position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); background: #1f2937; color: white; padding: 6px 8px; border-radius: 8px; font-size: 12px; font-weight: 500; white-space: nowrap; z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .script-symbol:hover::before { content: ''; position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); border-width: 6px 6px 0 6px; border-style: solid; border-color: #1f2937 transparent transparent transparent; }
+
         /* QUIZ SCREEN */
-        #quizScreen { z-index: 2; transform: translateY(0); }
+        #quizScreen { z-index: 2; }
         .question-container { padding: 80px 20px 20px 20px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         #progressText { color: #888; font-weight: 500; font-size: 16px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;}
         h1 { font-size: 36px; color: #333; font-weight: 600; margin: 0; letter-spacing: -1px; }
@@ -32,6 +48,7 @@
         @media (max-width: 768px) { .buttons-grid { grid-template-columns: 1fr; } }
         
         .answer-btn { background-color: #7b93ff; color: black; border: none; border-radius: 16px; padding: 20px 10px; font-size: 22px; font-weight: 500; cursor: pointer; min-height: 100px; width: 100%; transition: all 0.3s ease; }
+        .answer-btn .script-symbol { color: #ffffff; border-bottom-color: #ffffff; }
         .answer-btn:not(:disabled):hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 8px 15px rgba(123, 147, 255, 0.5), 0 0 15px #7b93ff; color: white; }
         .answer-btn:not(:disabled):active { transform: translateY(2px) scale(0.95); box-shadow: 0 2px 5px rgba(123, 147, 255, 0.4); }
         .answer-btn:disabled { opacity: 0.8; cursor: default; }
@@ -67,6 +84,18 @@
         <a href="index.html" class="logo-link"><img src="HaiLanguageLogoFull.png" alt="HaiLanguage Logo"></a>
         <a id="backBtn" href="usercourses.html" class="secondary-btn">Quit Level</a>
     </header>
+
+    <div id="learningScreen" class="screen-view active">
+        <div class="content-wrapper">
+            <div class="learning-container">
+                <div class="learning-badge">Learning section</div>
+                <h2 id="levelIntroTitle" class="learning-title">Level 1</h2>
+                <p id="levelIntroText" class="learning-intro">Get ready to learn the basics step by step.</p>
+                <div id="learningCards" class="learning-cards"></div>
+                <button id="startQuizBtn" class="primary-btn">Start Quiz</button>
+            </div>
+        </div>
+    </div>
 
     <div id="quizScreen" class="screen-view">
         <div class="content-wrapper">
@@ -110,6 +139,7 @@
     let levelIndex = 0; 
     let currentQuestionIndex = 0;
     let userScore = 0;
+    let currentLevelData = null;
 
     const progressText = document.getElementById('progressText');
     const questionEl = document.getElementById('questionText');
@@ -121,6 +151,12 @@
     const feedbackTitle = document.getElementById('feedbackTitle');
     const feedbackSubtext = document.getElementById('feedbackSubtext');
     const continueBtn = document.getElementById('continueBtn');
+    const learningScreen = document.getElementById('learningScreen');
+    const quizScreen = document.getElementById('quizScreen');
+    const levelIntroTitle = document.getElementById('levelIntroTitle');
+    const levelIntroText = document.getElementById('levelIntroText');
+    const learningCards = document.getElementById('learningCards');
+    const startQuizBtn = document.getElementById('startQuizBtn');
     
     const resultsScreen = document.getElementById('resultsScreen');
     const resultHeadline = document.getElementById('resultHeadline');
@@ -143,13 +179,80 @@
         const fullCourseData = JSON.parse(localStorage.getItem(safeTopicKey) || '[]');
 
         if (fullCourseData.length > levelIndex) {
-            // Isolate ONLY the 5 questions for this specific level
-            activeLevelQuestions = fullCourseData[levelIndex].questions;
-            loadQuestion();
+            currentLevelData = fullCourseData[levelIndex];
+            activeLevelQuestions = currentLevelData.questions || [];
+            showLearningScreen();
         } else {
             window.location.href = 'usercourses.html';
         }
     };
+
+    function showLearningScreen() {
+        currentQuestionIndex = 0;
+        userScore = 0;
+        learningScreen.classList.add('active');
+        quizScreen.classList.remove('active');
+        resultsScreen.classList.remove('active');
+        renderLearningContent();
+    }
+
+    function escapeHtml(text) {
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function renderTextWithTooltips(text) {
+        if (typeof text !== 'string') return '';
+
+        const escaped = escapeHtml(text);
+        return escaped.replace(/([\p{L}\p{N}\p{M}][\p{L}\p{N}\p{M}\s\-_/]*?)\s*\((romaji|transliteration|romanized|pinyin):\s*([^\)]+)\)/gu, (match, symbol, label, pronunciation) => {
+            const cleanSymbol = symbol.trim();
+            const cleanPronunciation = pronunciation.trim();
+            if (!cleanSymbol || !cleanPronunciation) return match;
+            return `<span class="script-symbol" data-pronunciation="${escapeHtml(cleanPronunciation)}">${escapeHtml(cleanSymbol)}<span class="pronunciation-inline">(${escapeHtml(cleanPronunciation)})</span></span>`;
+        });
+    }
+
+    function setRichText(element, text) {
+        if (!element) return;
+        element.innerHTML = renderTextWithTooltips(text);
+    }
+
+    function renderLearningContent() {
+        levelIntroTitle.innerText = currentLevelData?.levelTitle || `Level ${levelIndex + 1}`;
+        setRichText(levelIntroText, currentLevelData?.intro || 'This level introduces the key ideas in a simple, step-by-step way.');
+
+        const learningItems = Array.isArray(currentLevelData?.learning) ? currentLevelData.learning : [];
+        if (learningItems.length === 0) {
+            learningCards.innerHTML = `
+                <div class="learning-card">
+                    <strong>Practice makes progress</strong>
+                    <p>${renderTextWithTooltips('Review the examples and then start the quiz to test yourself.')}</p>
+                </div>
+            `;
+            return;
+        }
+
+        learningCards.innerHTML = learningItems.map(item => {
+            if (typeof item === 'string') {
+                return `<div class="learning-card"><strong>Key idea</strong><p>${renderTextWithTooltips(item)}</p></div>`;
+            }
+            const title = item.title || 'Key idea';
+            const content = item.content || '';
+            return `<div class="learning-card"><strong>${escapeHtml(title)}</strong><p>${renderTextWithTooltips(content)}</p></div>`;
+        }).join('');
+    }
+
+    function showQuizScreen() {
+        learningScreen.classList.remove('active');
+        quizScreen.classList.add('active');
+        resultsScreen.classList.remove('active');
+        loadQuestion();
+    }
 
     function loadQuestion() {
         feedbackBanner.classList.remove('show'); 
@@ -157,11 +260,11 @@
         
         const currentQ = activeLevelQuestions[currentQuestionIndex];
 
-        questionEl.innerText = currentQ.question; 
-        answerButtons[0].innerText = currentQ.options[0];
-        answerButtons[1].innerText = currentQ.options[1];
-        answerButtons[2].innerText = currentQ.options[2];
-        answerButtons[3].innerText = currentQ.options[3];
+        setRichText(questionEl, currentQ.question);
+        setRichText(answerButtons[0], currentQ.options[0]);
+        setRichText(answerButtons[1], currentQ.options[1]);
+        setRichText(answerButtons[2], currentQ.options[2]);
+        setRichText(answerButtons[3], currentQ.options[3]);
         answerButtons.forEach(btn => btn.disabled = false);
     }
 
@@ -179,7 +282,7 @@
         } else {
             feedbackBanner.classList.add('incorrect');
             feedbackTitle.innerText = "Incorrect";
-            feedbackSubtext.innerText = "Correct answer: " + currentQ.options[currentQ.correctIndex]; 
+            setRichText(feedbackSubtext, "Correct answer: " + currentQ.options[currentQ.correctIndex]);
         }
         feedbackBanner.classList.add('show');
     }
@@ -188,6 +291,7 @@
     answerButtons[1].addEventListener('click', () => checkAnswer(1));
     answerButtons[2].addEventListener('click', () => checkAnswer(2));
     answerButtons[3].addEventListener('click', () => checkAnswer(3));
+    startQuizBtn.addEventListener('click', showQuizScreen);
 
     continueBtn.addEventListener('click', () => {
         if (currentQuestionIndex < activeLevelQuestions.length - 1) {
@@ -206,38 +310,32 @@
         scoreText.innerText = `${userScore} / ${total}`;
         percentText.innerText = `${percentage}%`;
 
-        // PASS OR FAIL LOGIC
         if (percentage >= 50) {
-            // They Passed!
             resultHeadline.innerText = "Level Passed!";
             resultHeadline.style.color = "#58cc02";
             messageText.innerText = "Great job! You've unlocked the next unit.";
             percentText.style.color = "#58cc02";
             
-            // Advance progress if they beat their highest level
             let currentProgress = parseInt(localStorage.getItem('hai_progress_' + currentTopic.toLowerCase())) || 0;
             if (levelIndex >= currentProgress) {
                 localStorage.setItem('hai_progress_' + currentTopic.toLowerCase(), levelIndex + 1);
             }
-            // Clear any fail state
             localStorage.setItem('hai_failed_' + currentTopic.toLowerCase(), '-1');
 
         } else {
-            // They Failed! (< 50%)
             resultHeadline.innerText = "Level Failed";
             resultHeadline.style.color = "#ff4b4b";
             messageText.innerText = "You scored below 50%. You must retry this level to advance.";
             percentText.style.color = "#ff4b4b";
-            
-            // Record fail state so the map turns red
             localStorage.setItem('hai_failed_' + currentTopic.toLowerCase(), levelIndex.toString());
         }
 
+        learningScreen.classList.remove('active');
+        quizScreen.classList.remove('active');
         resultsScreen.classList.add('active');
     }
 
     restartBtn.addEventListener('click', () => {
-        // Return to the map to see the red/green changes!
         window.location.href = 'courseselect.html?topic=' + encodeURIComponent(currentTopic);
     });
 </script>

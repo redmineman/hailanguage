@@ -150,11 +150,14 @@
             const featuredCourses = savedCourses.slice(0, 3);
             featuredCourses.forEach(course => {
                 const courseTitle = course.topic || 'New Course';
+                const courseProgress = parseInt(localStorage.getItem('hai_progress_' + courseTitle.toLowerCase())) || 0;
+                const nextLevel = Math.min(courseProgress, 4);
+                const linkTarget = `course.html?topic=${encodeURIComponent(courseTitle)}&lvl=${nextLevel}`;
                 levelsGrid.innerHTML += `
-                    <a href="courseselect.html?topic=${encodeURIComponent(courseTitle)}" class="level-card">
+                    <a href="${linkTarget}" class="level-card">
                         <div class="level-icon">${course.icon || '📝'}</div>
                         <p class="level-topic">${courseTitle}</p>
-                        <h4 class="level-name">5-Level Beginner Path</h4>
+                        <h4 class="level-name">${courseProgress > 0 ? 'Continue Level ' + (nextLevel + 1) : 'Start Level 1'}</h4>
                     </a>
                 `;
             });
